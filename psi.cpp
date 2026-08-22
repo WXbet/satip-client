@@ -496,16 +496,18 @@ void satipPSI::recompute()
 	}
 
 	/*
-	 * A service is active if enigma2 requested its PMT PID or any of its
-	 * elementary stream PIDs (video, audio, etc.).
+	 * A service is active when the kernel joined one of its elementary streams.
+	 * The pmt pid alone does not qualify: a service scan opens a section filter
+	 * on every pmt of the transponder, which would otherwise pull in the ecm
+	 * pids of every service at once.
 	 */
 	for (std::set<int>::iterator it = m_pat_pmt_pids.begin(); it != m_pat_pmt_pids.end(); ++it)
 	{
 		int pmt_pid = *it;
-		bool is_active = (m_joined_pids.find(pmt_pid) != m_joined_pids.end());
+		bool is_active = false;
 
 		std::map<int, pmt_info>::iterator pmt = m_pmt.find(pmt_pid);
-		if (!is_active && pmt != m_pmt.end())
+		if (pmt != m_pmt.end())
 		{
 			for (std::set<int>::iterator es = pmt->second.es_pids.begin(); es != pmt->second.es_pids.end(); ++es)
 			{
@@ -517,7 +519,7 @@ void satipPSI::recompute()
 			}
 		}
 
-		/* Always watch known PMT PIDs to receive their table sections */
+		/* watch every known pmt, its sections are what tells us the es pids */
 		watched.insert(pmt_pid);
 
 		if (!is_active)

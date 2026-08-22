@@ -21,12 +21,15 @@ anything. On a local tuner the problem does not exist, because the full
 transponder passes through the CAM.
 
 With `ca_pids:1` satipclient looks for those pids itself. It taps the incoming
-TS, follows the PAT, the CAT and the PMTs of the services that are currently
-being received, and adds the ECM/EMM pids it finds to the RTSP pid list. No
-change to enigma2 or to the vtuner driver is needed: the pmt pids of the active
-services are the intersection of "pmt pids announced by the PAT" and "pids the
-kernel asked for", because enigma2 always keeps a section filter open on the
-pmt of a service it receives.
+TS and follows the PAT, the CAT and the PMTs of the transponder, and adds the
+ECM/EMM pids of the services that are currently being received to the RTSP pid
+list.
+
+A service counts as received when the kernel asked for one of its elementary
+streams. Those pids stay joined for as long as a service is watched or
+recorded, which is what makes the ecm pids follow a zap. The pmt pid on its own
+does not qualify: a service scan opens a section filter on every pmt of the
+transponder, which would otherwise mark every service as active at once.
 
 To switch it on, append `ca_pids:1` to the tuner line in
 `/etc/vtuner.conf`. That is all it takes, the other two options are
